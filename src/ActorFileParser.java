@@ -17,7 +17,7 @@ public class ActorFileParser extends FileParser
 		{
 			String line = infile.nextLine();
 			String personName = line.substring(0, line.indexOf('\t'));
-			
+			insertPerson(personName);
 			line = line.substring(line.lastIndexOf('\t'));
 			
 			do
@@ -64,7 +64,6 @@ public class ActorFileParser extends FileParser
 
 	private void insertPerson(String personName) 
 	{
-		System.out.println(personName);
 		
 	}
 

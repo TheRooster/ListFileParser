@@ -19,7 +19,7 @@ public class Parser
 		s = keyboard.nextLine();
 		
 		//FileParser p = new GenreFileParser(s);
-		FileParser p = new ActorFileParser(s);
+		FileParser p = new AKAFileParser(s);
 		//switch(s.substring(s.lastIndexOf('/')+1))
 		//{
 		//case "genres.list":p = new GenreFileParser(s);
