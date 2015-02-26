@@ -18,13 +18,18 @@ public class Parser
 		Scanner keyboard = new Scanner(System.in);
 		s = keyboard.nextLine();
 		
-		//FileParser p = new GenreFileParser(s);
-		FileParser p = new RatingFileParser(s);
-		//switch(s.substring(s.lastIndexOf('/')+1))
-		//{
-		//case "genres.list":p = new GenreFileParser(s);
+		FileParser p;
+		switch(s.substring(s.lastIndexOf('/')+1))
+		{
+			case "genres.list":p = new GenreFileParser(s);break;
+			case "actors.list":p = new ActorFileParser(s);break;
+			case "actresses.list":p = new ActorFileParser(s);break;
+			case "ratings.list":p = new RatingFileParser(s);break;
+			case "directors.list":p = new DirectorFileParser(s);break;
+			case "aka-names.list":p = new AKAFileParser(s);break;
+			default: p = new FileParser(s);break;
 		
-		//}
+		}
 		
 	}
 
