@@ -1,4 +1,5 @@
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Scanner;
 
@@ -6,7 +7,11 @@ import java.util.Scanner;
 public class GenreFileParser extends FileParser
 {
 
-	public GenreFileParser(String filename) 
+	int numBatched = 0;
+	PreparedStatement movieStmt;
+	PreparedStatement genreStmt;
+	PreparedStatement joinStmt;
+	public GenreFileParser(String filename)
 	{
 		super(filename);
 	}
@@ -16,7 +21,7 @@ public class GenreFileParser extends FileParser
 	{
 		try {
 			Class.forName("com.mysql.jdbc.Driver").newInstance();
-			conn = DriverManager.getConnection("jdbc:mysql://52.10.179.200:3306/imdb?user=root&password=Th3_R005t3r");
+			conn = DriverManager.getConnection("");
 		} catch (InstantiationException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -77,6 +82,9 @@ public class GenreFileParser extends FileParser
 			line=infile.nextLine();
 		}
 		try {
+			genreStmt.executeBatch();
+			movieStmt.executeBatch();
+			joinStmt.executeBatch();
 			conn.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -89,27 +97,37 @@ public class GenreFileParser extends FileParser
 		try {
 			
 			
-			stmt = conn.prepareStatement("INSERT IGNORE INTO genre(genre_name) VALUES(?);");
-			stmt.setString(1, genreName);
-			stmt.execute();
+			this.genreStmt = conn.prepareStatement("INSERT IGNORE INTO genre(genre_name) VALUES(?);");
+			genreStmt.setString(1, genreName);
+			genreStmt.addBatch();
 			
-			stmt = conn.prepareStatement("INSERT IGNORE INTO movie (movie_year, movie_title, movie_tv_ind) VALUES(?, ?, ?);");
-			stmt.setString(1, movieDate);
-			stmt.setString(2, movieName);
-			stmt.setString(3, tvIndicator);
-			stmt.execute();
+			this.movieStmt = conn.prepareStatement("INSERT IGNORE INTO movie (movie_year, movie_title, movie_tv_ind) VALUES(?, ?, ?);");
+			movieStmt.setString(1, movieDate);
+			movieStmt.setString(2, movieName);
+			movieStmt.setString(3, tvIndicator);
+			movieStmt.addBatch();
 			
-			stmt = conn.prepareStatement("INSERT INTO movieGenre (genre_id, movie_id) SELECT genre_id, movie_id FROM genre, movie WHERE genre.genre_name = ? AND movie.movie_title = ? AND movie.movie_year = ?;");
-			stmt.setString(1, genreName);
-			stmt.setString(2, movieName);
-			stmt.setString(3, movieDate);
-			stmt.execute();
+			this.joinStmt = conn.prepareStatement("INSERT INTO movieGenre (genre_id, movie_id) SELECT genre_id, movie_id FROM genre, movie WHERE genre.genre_name = ? AND movie.movie_title = ? AND movie.movie_year = ?;");
+			joinStmt.setString(1, genreName);
+			joinStmt.setString(2, movieName);
+			joinStmt.setString(3, movieDate);
+			joinStmt.addBatch();
 			
+			numBatched ++;
+			if(numBatched >= 50)
+			{
+				numBatched = 0;
+				genreStmt.executeBatch();
+				movieStmt.executeBatch();
+				joinStmt.executeBatch();
+			}
 			
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+
 	}	
 
 }

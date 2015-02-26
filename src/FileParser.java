@@ -4,9 +4,6 @@ import java.sql.*;
 
 public class FileParser
 {
-	// JDBC driver name and database URL
-	static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";  
-	static final String DB_URL = "jdbc:mysql://54.201.253.2:3306/imdb";
 	
 	Connection conn = null;
 	PreparedStatement stmt = null;
