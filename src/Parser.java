@@ -19,7 +19,7 @@ public class Parser
 		s = keyboard.nextLine();
 		
 		FileParser p;
-		switch(s.substring(s.lastIndexOf('/')+1))
+		switch(s.substring(s.lastIndexOf('\\')+1))
 		{
 			case "genres.list":p = new GenreFileParser(s);break;
 			case "actors.list":p = new ActorFileParser(s);break;

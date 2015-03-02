@@ -1,17 +1,40 @@
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Scanner;
 
 
 public class DirectorFileParser extends FileParser 
 {
-
+	PreparedStatement directionStatement, personStatement;
+	int numBatched;
 	public DirectorFileParser(String filename) 
 	{
 		super(filename);
-		// TODO Auto-generated constructor stub
+		numBatched = 0;
+
 	}
 	
 	public void parse(Scanner infile)
 	{
+		try {
+			
+			Class.forName("com.mysql.jdbc.Driver").newInstance();
+			
+			conn = DriverManager.getConnection(DB_CONN);
+			personStatement = conn.prepareStatement("INSERT IGNORE INTO person(person_name) VALUES(?);");
+			directionStatement = conn.prepareStatement("INSERT INTO direction SELECT person_id, movie_id "
+																			+ "FROM person, movie "
+																			+ "WHERE person_name = ? AND movie_title = ? AND movie_year = ?;");
+		
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InstantiationException | IllegalAccessException
+				| ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		do
 		{
 			String line = infile.nextLine();
@@ -43,15 +66,50 @@ public class DirectorFileParser extends FileParser
 				line = infile.nextLine();
 			}while(!line.equals(""));
 		}while(infile.hasNextLine());
+		
+		
+		try {
+			personStatement.executeBatch();
+			directionStatement.executeBatch();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 
 	private void insertDirection(String personName, String movieName, String movieDate)
 	{
-		System.out.printf("%s:%s:%s\n", personName, movieName, movieDate);
+		try {
+			directionStatement.setString(1, personName);
+			directionStatement.setString(2, movieName);
+			directionStatement.setString(3, movieDate);
+			directionStatement.addBatch();
+			
+			if(numBatched++ > 5000)
+			{
+				numBatched = 0;
+				personStatement.executeBatch();
+				directionStatement.executeBatch();
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
 		
 	}
 
-	private void insertPerson(String personName) {
+	private void insertPerson(String personName) 
+	{
+		try {
+			personStatement.setString(1, personName);
+			personStatement.addBatch();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 	}
 

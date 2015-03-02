@@ -15,20 +15,28 @@ public class ActorFileParser extends FileParser
 	{
 		super(filename);
 		
-		
-		
 	}
 	
 	public void parse(Scanner infile)
 	{
 		try {
 			Class.forName("com.mysql.jdbc.Driver").newInstance();
-			conn = DriverManager.getConnection("");
+			conn = DriverManager.getConnection(DB_CONN);
+			
+			personStatement = conn.prepareStatement("INSERT IGNORE INTO person(person_name) VALUES(?);");
+			
+			performanceStatement = conn.prepareStatement("INSERT INTO `performance`(person_id, character_id, movie_id) "
+					+ "SELECT person_id, character_id, movie_id "
+					+ "FROM person, `character`, movie "
+					+ "WHERE movie_title = ? AND movie_year = ? AND person_name = ? AND character_name = ?;");
+			
+			characterStatement = conn.prepareStatement("INSERT IGNORE INTO `character`(character_name) VALUES(?);");
+			
+			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
-		
 		int numBatched = 0;
 		do
 		{
@@ -68,7 +76,7 @@ public class ActorFileParser extends FileParser
 				
 				insertPerformance(personName, movieName, movieDate, charName);
 				
-				if(++numBatched >= 1000)
+				if(numBatched ++> 5000)
 				{
 					numBatched = 0;
 					try {
@@ -96,11 +104,9 @@ public class ActorFileParser extends FileParser
 	private void insertPerformance(String personName, String movieName, String movieDate, String charName)
 	{
 		try {
-			this.characterStatement = conn.prepareStatement("INSERT IGNORE INTO `character`(character_name) VALUES(?);");
 			characterStatement.setString(1, charName);
 			characterStatement.addBatch();
 			
-			this.performanceStatement = conn.prepareStatement("INSERT IGNORE INTO `performance`(person_id, character_id, movie_id) SELECT person_id, character_id, movie_id FROM person, `character`, movie WHERE movie_title = ? AND movie_year = ? AND person_name = ? AND character_name = ?;");
 			performanceStatement.setString(1, movieName);
 			performanceStatement.setString(2, movieDate);
 			performanceStatement.setString(3, personName);
@@ -116,7 +122,6 @@ public class ActorFileParser extends FileParser
 	private void insertPerson(String personName) 
 	{
 		try {
-			this.personStatement = conn.prepareStatement("INSERT IGNORE INTO person(person_name) VALUES(?);");
 			personStatement.setString(1, personName);
 			personStatement.addBatch();
 			

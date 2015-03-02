@@ -21,7 +21,12 @@ public class GenreFileParser extends FileParser
 	{
 		try {
 			Class.forName("com.mysql.jdbc.Driver").newInstance();
-			conn = DriverManager.getConnection("");
+			conn = DriverManager.getConnection(DB_CONN);
+			
+			genreStmt = conn.prepareStatement("INSERT IGNORE INTO genre(genre_name) VALUES(?);");
+			movieStmt = conn.prepareStatement("INSERT IGNORE INTO movie (movie_year, movie_title, movie_tv_ind) VALUES(?, ?, ?);");
+			joinStmt = conn.prepareStatement("INSERT INTO movieGenre (genre_id, movie_id) SELECT genre_id, movie_id FROM genre, movie WHERE genre.genre_name = ? AND movie.movie_title = ? AND movie.movie_year = ?;");
+			
 		} catch (InstantiationException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -97,24 +102,21 @@ public class GenreFileParser extends FileParser
 		try {
 			
 			
-			this.genreStmt = conn.prepareStatement("INSERT IGNORE INTO genre(genre_name) VALUES(?);");
 			genreStmt.setString(1, genreName);
 			genreStmt.addBatch();
 			
-			this.movieStmt = conn.prepareStatement("INSERT IGNORE INTO movie (movie_year, movie_title, movie_tv_ind) VALUES(?, ?, ?);");
 			movieStmt.setString(1, movieDate);
 			movieStmt.setString(2, movieName);
 			movieStmt.setString(3, tvIndicator);
 			movieStmt.addBatch();
 			
-			this.joinStmt = conn.prepareStatement("INSERT INTO movieGenre (genre_id, movie_id) SELECT genre_id, movie_id FROM genre, movie WHERE genre.genre_name = ? AND movie.movie_title = ? AND movie.movie_year = ?;");
 			joinStmt.setString(1, genreName);
 			joinStmt.setString(2, movieName);
 			joinStmt.setString(3, movieDate);
 			joinStmt.addBatch();
 			
 			numBatched ++;
-			if(numBatched >= 50)
+			if(numBatched >= 5000)
 			{
 				numBatched = 0;
 				genreStmt.executeBatch();

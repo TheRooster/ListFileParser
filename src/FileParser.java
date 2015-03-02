@@ -6,7 +6,8 @@ public class FileParser
 {
 	
 	Connection conn = null;
-	PreparedStatement stmt = null;
+	
+	final String DB_CONN = "";
 	
 	public FileParser(String filename)
 	{
